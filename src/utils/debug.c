@@ -5,6 +5,25 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/18 14:30:00 by rluiz             #+#    #+#             */
+/*   Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../internal/metadata.h"
+
+/*
+** Debug utility functions
+** NASA C Standard Compliance
+*/
+
+/* Placeholder for debug utility functions */****************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   debug.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 11:17:45 by rluiz             #+#    #+#             */
 /*   Updated: 2025/09/18 11:35:30 by rluiz            ###   ########.fr       */
 /*                                                                            */

@@ -6,7 +6,7 @@
 #    By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/18 11:17:50 by rluiz             #+#    #+#              #
-#    Updated: 2025/09/18 12:13:13 by rluiz            ###   ########.fr        #
+#    Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -54,13 +54,23 @@ CORE_SRCS   = $(SRCDIR)/core/malloc.c \
               $(SRCDIR)/core/free.c \
               $(SRCDIR)/core/realloc.c
 
+# Wrapper sources (NASA compliance)
+WRAPPER_SRCS = $(SRCDIR)/wrappers/mmap_wrapper.c \
+               $(SRCDIR)/wrappers/error_handler.c
+
+# Zone management sources
+ZONE_SRCS   = $(SRCDIR)/zones/zone_manager.c
+
+# Internal management sources
+INTERNAL_SRCS = $(SRCDIR)/internal/chunk_manager.c
+
 # Utility sources  
 UTILS_SRCS  = $(SRCDIR)/utils/show_alloc_mem.c \
               $(SRCDIR)/utils/memory_utils.c \
               $(SRCDIR)/utils/debug.c
 
 # All sources
-SRCS        = $(CORE_SRCS) $(UTILS_SRCS)
+SRCS        = $(CORE_SRCS) $(WRAPPER_SRCS) $(ZONE_SRCS) $(INTERNAL_SRCS) $(UTILS_SRCS)
 
 OBJS        = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
