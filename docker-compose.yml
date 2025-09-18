@@ -1,0 +1,22 @@
+services:
+  c-dev:
+    build: .
+    container_name: malloc-dev
+    volumes:
+      # Mount the entire project directory
+      - .:/workspace
+      # Preserve bash history
+      - bash_history:/home/developer/.bash_history
+    working_dir: /workspace
+    # Keep container running
+    tty: true
+    stdin_open: true
+    # Optional: if you need specific environment variables
+    environment:
+      - TERM=xterm-256color
+    # Optional: if you need to expose ports
+    # ports:
+    #   - "8080:8080"
+
+volumes:
+  bash_history:

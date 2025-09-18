@@ -1,0 +1,60 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug in Docker",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/workspace/libft/test_program",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "/workspace",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "Build with Docker",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "pipeTransport": {
+        "debuggerPath": "/usr/bin/gdb",
+        "pipeProgram": "docker",
+        "pipeArgs": [
+          "exec",
+          "-i",
+          "malloc-dev",
+          "sh",
+          "-c"
+        ],
+        "pipeCwd": ""
+      },
+      "sourceFileMap": {
+        "/workspace": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Users/luizr/Documents/malloc/libft",
+      "program": "c:/Users/luizr/Documents/malloc/libft/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
