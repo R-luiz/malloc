@@ -25,11 +25,12 @@ OBJDIR = $(BUILDDIR)/test_obj
 BINDIR = $(BUILDDIR)/test_bin
 
 # Library paths
-LIBFT_DIR = $(LIBDIR)
+LIBFT_DIR = $(LIBDIR)/build
+LIBFT_INC = $(LIBDIR)/include
 MALLOC_LIB_DIR = $(BUILDDIR)/bin
 
 # Include paths
-INCLUDES = -I$(INCDIR) -I$(LIBDIR) -I$(SRCDIR)
+INCLUDES = -I$(INCDIR) -I$(LIBFT_INC) -I$(SRCDIR)
 
 # Library linking
 LIBPATH = -L$(MALLOC_LIB_DIR) -L$(LIBFT_DIR)

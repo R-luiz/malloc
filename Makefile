@@ -6,7 +6,7 @@
 #    By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/18 11:17:50 by rluiz             #+#    #+#              #
-#    Updated: 2025/09/18 11:50:57 by rluiz            ###   ########.fr        #
+#    Updated: 2025/09/18 12:13:13 by rluiz            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,6 +42,8 @@ BUILDDIR    = build
 OBJDIR      = $(BUILDDIR)/obj
 BINDIR      = $(BUILDDIR)/bin
 LIBDIR      = lib
+LIBFT_LIB   = $(LIBDIR)/build/libft.a
+LIBFT_INC   = $(LIBDIR)/include
 TESTDIR     = tests
 DOCDIR      = docs
 EXAMPLEDIR  = examples
@@ -64,7 +66,7 @@ OBJS        = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 # ================================ LIBFT ==================================== #
 LIBFT_DIR   = $(LIBDIR)
-LIBFT       = $(LIBFT_DIR)/libft.a
+LIBFT       = $(LIBFT_LIB)
 
 # ================================ RULES ==================================== #
 .PHONY: all clean fclean re test test-quick test-all test-performance test-stress examples docs install help
@@ -78,7 +80,7 @@ $(OBJDIR) $(BINDIR):
 # Compilation de la bibliothèque dynamique
 $(NAME): $(LIBFT) $(OBJS) | $(BINDIR)
 	@echo "📦 Creating library $(NAME)..."
-	$(CC) $(LDFLAGS) -o $(BINDIR)/$(NAME) $(OBJS) -L$(LIBFT_DIR) -lft
+	$(CC) $(LDFLAGS) -o $(BINDIR)/$(NAME) $(OBJS) -L$(LIBDIR)/build -lft
 	@echo "🔗 Creating symbolic link $(LINK_NAME) -> $(NAME)"
 	@rm -f $(BINDIR)/$(LINK_NAME)
 	@ln -s $(NAME) $(BINDIR)/$(LINK_NAME)
@@ -92,7 +94,7 @@ $(NAME): $(LIBFT) $(OBJS) | $(BINDIR)
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	@mkdir -p $(dir $@)
 	@echo "⚙️  Compiling $<..."
-	$(CC) $(CFLAGS) -I$(INCDIR) -I$(LIBFT_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(INCDIR) -I$(LIBFT_INC) -c $< -o $@
 
 # Compilation de la libft
 $(LIBFT):

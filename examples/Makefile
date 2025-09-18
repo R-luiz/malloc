@@ -23,10 +23,11 @@ EXAMPLEDIR = .
 
 # Library paths
 MALLOC_LIB_DIR = $(BUILDDIR)/bin
-LIBFT_DIR = ../lib
+LIBFT_DIR = ../lib/build
+LIBFT_INC = ../lib/include
 
 # Include and library paths
-INCLUDES = -I$(INCDIR) -I$(LIBFT_DIR)
+INCLUDES = -I$(INCDIR) -I$(LIBFT_INC)
 LIBPATH = -L$(MALLOC_LIB_DIR) -L$(LIBFT_DIR)
 LIBS = -lft_malloc -lft
 
