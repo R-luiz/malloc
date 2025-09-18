@@ -5,6 +5,7 @@
 # include <unistd.h>
 # include <pthread.h>
 # include <stdlib.h>
+# include "includes/libft/libft.h"
 
 /* ===== Gestion multi-plateforme ===== */
 # ifdef LINUX
