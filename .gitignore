@@ -1,0 +1,17 @@
+# Build artifacts
+build/
+*.o
+*.so
+*.a
+
+# Debug files
+*.dSYM/
+*.gdb_history
+
+# Editor files
+.vscode/settings.json
+.DS_Store
+
+# Test outputs
+test_results.log
+valgrind.log
