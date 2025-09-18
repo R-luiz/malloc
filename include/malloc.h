@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 11:17:45 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 11:17:46 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/18 12:02:17 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 # include <unistd.h>
 # include <pthread.h>
 # include <stdlib.h>
-# include "includes/libft/libft.h"
+# include <stddef.h>
 
 /* ===== Gestion multi-plateforme ===== */
 # ifdef LINUX

@@ -1,17 +1,42 @@
-# Build artifacts
+# Build artifacts - NASA architecture
 build/
 *.o
 *.so
 *.a
 
+# Executables
+test_malloc
+test_free
+test_realloc
+test_runner
+test_all
+example_*
+
 # Debug files
 *.dSYM/
 *.gdb_history
+core
+core.*
 
 # Editor files
 .vscode/settings.json
 .DS_Store
+*~
+*.swp
+*.swo
 
 # Test outputs
 test_results.log
 valgrind.log
+*.log
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Library symlinks
+libft_malloc.so
