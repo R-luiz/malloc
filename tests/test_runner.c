@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 11:17:45 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 12:01:23 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/18 12:29:13 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 extern int run_malloc_tests(void);
 extern int run_free_tests(void);
 extern int run_realloc_tests(void);
+extern int run_comparison_tests(void);
 
 /* Test suite structure */
 typedef struct {
