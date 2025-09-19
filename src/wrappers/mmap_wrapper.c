@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 14:30:00 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 10:23:23 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,16 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
+#ifndef MAP_ANONYMOUS
+#ifdef MAP_ANON
+#define MAP_ANONYMOUS MAP_ANON
+#else
+#define MAP_ANONYMOUS 0x20
+#endif
+#endif
 
 /*
 ** NASA C Standard Compliance:

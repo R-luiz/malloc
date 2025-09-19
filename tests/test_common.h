@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 11:17:45 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 11:50:57 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 10:44:58 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,10 +86,11 @@ typedef enum {
 
 /* Test configuration - NASA principle: Configurable validation */
 typedef struct {
-    int verbose;
-    int quick_mode;
-    int memory_debug;
-    int performance_mode;
+    const char *name;
+    const char *description;
+    int (*test_func)(void);
+    int quick_test;
+    int enabled;
 } test_config_t;
 
 /* Function declarations for test suites - NASA principle: Clear interfaces */

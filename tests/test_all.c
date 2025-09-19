@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 11:17:45 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 11:56:46 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 10:43:43 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,14 +42,6 @@ extern int run_free_tests(void);
 extern int run_realloc_tests(void);
 
 /* Test configuration */
-typedef struct {
-    const char *name;
-    const char *description;
-    int (*test_func)(void);
-    int quick_test;  // 1 if included in quick tests
-    int enabled;
-} test_config_t;
-
 /* Global counters */
 static int g_tests_run = 0;
 static int g_tests_passed = 0;

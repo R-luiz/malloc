@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 14:30:00 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/19 09:25:14 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 10:25:02 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
+
+/* External function declarations */
+extern uint64_t get_timestamp_us(void);
+extern uint64_t calculate_checksum(const void *data, size_t size);
 
 /*
 ** NASA C Standard Compliance:

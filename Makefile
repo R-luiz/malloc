@@ -6,7 +6,7 @@
 #    By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/18 11:17:50 by rluiz             #+#    #+#              #
-#    Updated: 2025/09/19 09:41:24 by rluiz            ###   ########.fr        #
+#    Updated: 2025/09/19 10:22:31 by rluiz            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -60,14 +60,14 @@ UTILS_SRCS  = $(SRCDIR)/utils/show_alloc_mem.c \
               $(SRCDIR)/utils/memory_utils.c \
               $(SRCDIR)/utils/debug.c
 
-# Phase 1 sources (minimal implementation)
-SRCS        = $(CORE_SRCS) $(UTILS_SRCS)
+# Phase 2+ sources (zone-based implementation)
+WRAPPER_SRCS = $(SRCDIR)/wrappers/mmap_wrapper.c \
+               $(SRCDIR)/wrappers/error_handler.c
+ZONE_SRCS   = $(SRCDIR)/zones/zone_manager.c
+INTERNAL_SRCS = $(SRCDIR)/internal/chunk_manager.c
 
-# Phase 2+ sources (will be added later)
-# WRAPPER_SRCS = $(SRCDIR)/wrappers/mmap_wrapper.c \
-#                $(SRCDIR)/wrappers/error_handler.c
-# ZONE_SRCS   = $(SRCDIR)/zones/zone_manager.c
-# INTERNAL_SRCS = $(SRCDIR)/internal/chunk_manager.c
+# All sources for Phase 2 implementation
+SRCS        = $(CORE_SRCS) $(UTILS_SRCS) $(WRAPPER_SRCS) $(ZONE_SRCS) $(INTERNAL_SRCS)
 
 OBJS        = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 

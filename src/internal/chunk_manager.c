@@ -6,9 +6,11 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 14:30:00 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 10:25:30 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#define _POSIX_C_SOURCE 199309L
 
 #include "../internal/metadata.h"
 #include "../wrappers/error_handler.h"
