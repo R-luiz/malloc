@@ -6,13 +6,14 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 14:30:00 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 09:25:14 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../internal/metadata.h"
 #include "../wrappers/mmap_wrapper.h"
 #include "../wrappers/error_handler.h"
+#include "../internal/malloc_constants.h"
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>

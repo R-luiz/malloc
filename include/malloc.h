@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 11:17:45 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 09:38:34 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,10 +60,27 @@ int     malloc_validate_system(void);
 
 /* ===== Public Type Definitions ===== */
 /*
-** Forward declaration of statistics structure
-** Full definition in internal headers
+** Statistics structure for monitoring
+** NASA: Bounded data collection for monitoring
 */
-typedef struct s_malloc_stats t_malloc_stats;
+typedef struct s_malloc_stats {
+    size_t          bytes_allocated;    /* Current allocated bytes */
+    size_t          bytes_peak;         /* Peak allocation */
+    size_t          bytes_total;        /* Lifetime allocated */
+    
+    uint32_t        allocs_tiny;        /* Tiny allocations count */
+    uint32_t        allocs_small;       /* Small allocations count */
+    uint32_t        allocs_large;       /* Large allocations count */
+    
+    uint32_t        zones_active;       /* Currently active zones */
+    uint32_t        zones_total;        /* Total zones created */
+    
+    uint32_t        errors_count;       /* Error count */
+    uint32_t        corruption_count;   /* Corruption detections */
+    
+    double          fragmentation;      /* Fragmentation ratio */
+    uint64_t        update_time;        /* Last update timestamp */
+} t_malloc_stats;
 
 /*
 ** Get allocation statistics

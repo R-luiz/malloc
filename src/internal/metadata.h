@@ -6,7 +6,7 @@
 /*   By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/18 14:30:00 by rluiz             #+#    #+#             */
-/*   Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr       */
+/*   Updated: 2025/09/19 09:38:34 by rluiz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,29 +125,10 @@ typedef struct {
     uint32_t        checksum;           /* Parameter integrity */
 } t_alloc_request;
 
-/* ===== Statistics Structure ===== */
 /*
-** Memory allocation statistics
-** NASA Standard: Bounded data collection
+** Forward reference to malloc stats (defined in malloc.h)
 */
-typedef struct {
-    size_t          bytes_allocated;    /* Current allocated bytes */
-    size_t          bytes_peak;         /* Peak allocation */
-    size_t          bytes_total;        /* Lifetime allocated */
-    
-    uint32_t        allocs_tiny;        /* Tiny allocations count */
-    uint32_t        allocs_small;       /* Small allocations count */
-    uint32_t        allocs_large;       /* Large allocations count */
-    
-    uint32_t        zones_active;       /* Currently active zones */
-    uint32_t        zones_total;        /* Total zones created */
-    
-    uint32_t        errors_count;       /* Error count */
-    uint32_t        corruption_count;   /* Corruption detections */
-    
-    double          fragmentation;      /* Fragmentation ratio */
-    uint64_t        update_time;        /* Last update timestamp */
-} t_malloc_stats;
+struct s_malloc_stats;
 
 /* ===== Function Prototypes for Metadata Operations ===== */
 
@@ -170,8 +151,8 @@ int         manager_add_zone(t_zone_manager *manager, t_zone *zone);
 t_zone      *manager_find_zone_for_size(t_zone_manager *manager, size_t size);
 
 /* Statistics operations */
-int         stats_update(t_malloc_stats *stats, const t_zone_manager *manager);
-int         stats_validate(const t_malloc_stats *stats);
+int         stats_update(struct s_malloc_stats *stats, const t_zone_manager *manager);
+int         stats_validate(const struct s_malloc_stats *stats);
 
 /* Utility functions */
 uint64_t    calculate_checksum(const void *data, size_t size);

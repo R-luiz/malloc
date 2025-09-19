@@ -6,7 +6,7 @@
 #    By: rluiz <rluiz@student.42lehavre.fr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/18 11:17:50 by rluiz             #+#    #+#              #
-#    Updated: 2025/09/18 13:37:29 by rluiz            ###   ########.fr        #
+#    Updated: 2025/09/19 09:41:24 by rluiz            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -38,6 +38,7 @@ endif
 # ================================ DIRECTORIES =============================== #
 SRCDIR      = src
 INCDIR      = include
+SRCINTDIR   = $(SRCDIR)/internal
 BUILDDIR    = build
 OBJDIR      = $(BUILDDIR)/obj
 BINDIR      = $(BUILDDIR)/bin
@@ -49,28 +50,24 @@ DOCDIR      = docs
 EXAMPLEDIR  = examples
 
 # ================================ SOURCES ================================== #
-# Core functionality sources
+# Core functionality sources (Phase 1: Simple implementation)
 CORE_SRCS   = $(SRCDIR)/core/malloc.c \
               $(SRCDIR)/core/free.c \
               $(SRCDIR)/core/realloc.c
-
-# Wrapper sources (NASA compliance)
-WRAPPER_SRCS = $(SRCDIR)/wrappers/mmap_wrapper.c \
-               $(SRCDIR)/wrappers/error_handler.c
-
-# Zone management sources
-ZONE_SRCS   = $(SRCDIR)/zones/zone_manager.c
-
-# Internal management sources
-INTERNAL_SRCS = $(SRCDIR)/internal/chunk_manager.c
 
 # Utility sources  
 UTILS_SRCS  = $(SRCDIR)/utils/show_alloc_mem.c \
               $(SRCDIR)/utils/memory_utils.c \
               $(SRCDIR)/utils/debug.c
 
-# All sources
-SRCS        = $(CORE_SRCS) $(WRAPPER_SRCS) $(ZONE_SRCS) $(INTERNAL_SRCS) $(UTILS_SRCS)
+# Phase 1 sources (minimal implementation)
+SRCS        = $(CORE_SRCS) $(UTILS_SRCS)
+
+# Phase 2+ sources (will be added later)
+# WRAPPER_SRCS = $(SRCDIR)/wrappers/mmap_wrapper.c \
+#                $(SRCDIR)/wrappers/error_handler.c
+# ZONE_SRCS   = $(SRCDIR)/zones/zone_manager.c
+# INTERNAL_SRCS = $(SRCDIR)/internal/chunk_manager.c
 
 OBJS        = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
@@ -104,7 +101,7 @@ $(NAME): $(LIBFT) $(OBJS) | $(BINDIR)
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	@mkdir -p $(dir $@)
 	@echo "⚙️  Compiling $<..."
-	$(CC) $(CFLAGS) -I$(INCDIR) -I$(LIBFT_INC) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(INCDIR) -I$(LIBFT_INC) -I$(SRCINTDIR) -c $< -o $@
 
 # Compilation de la libft
 $(LIBFT):
