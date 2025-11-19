@@ -18,9 +18,10 @@ example_*
 # Debug files
 *.dSYM/
 *.gdb_history
-core
+/core
 core.*
 vgcore.*
+!src/core/
 
 # Editor files
 .vscode/settings.json
