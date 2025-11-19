@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #define MAX_ALLOCATIONS 10000
 #define LOG_BUFFER_SIZE 1024
