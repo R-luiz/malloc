@@ -27,6 +27,7 @@ void test_invalid_pointer_detection(void)
     printf("✓ free() on stack pointer did not crash\n");
 
     void *random_ptr = (void *)0xDEADBEEF;
+    printf("---> void *random_ptr = (void *)0xDEADBEEF; done\n");
     free(random_ptr);
     printf("✓ free() on random pointer did not crash\n");
 

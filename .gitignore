@@ -3,6 +3,7 @@ build/
 *.o
 *.so
 *.a
+test
 
 # Executables and test binaries
 test_malloc
