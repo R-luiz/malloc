@@ -5,7 +5,9 @@
       "Bash(gcc:*)",
       "Bash(dir)",
       "Bash(dir:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Read(//c//**)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

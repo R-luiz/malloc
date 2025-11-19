@@ -1,15 +1,18 @@
-# Build artifacts - NASA architecture
+# Build artifacts
 build/
 *.o
 *.so
 *.a
 
-# Executables
+# Executables and test binaries
 test_malloc
 test_free
 test_realloc
 test_runner
 test_all
+test_minimal
+test_simple
+test_debug
 example_*
 
 # Debug files
@@ -17,13 +20,16 @@ example_*
 *.gdb_history
 core
 core.*
+vgcore.*
 
 # Editor files
 .vscode/settings.json
+.vscode/.ropeproject
 .DS_Store
 *~
 *.swp
 *.swo
+.idea/
 
 # Test outputs
 test_results.log
@@ -33,6 +39,7 @@ valgrind.log
 # OS specific
 .DS_Store
 Thumbs.db
+ehthumbs.db
 
 # Temporary files
 *.tmp
@@ -40,3 +47,19 @@ Thumbs.db
 
 # Library symlinks
 libft_malloc.so
+libft_malloc_*.so
+
+# Compiled Object files
+*.slo
+*.lo
+*.obj
+
+# IDE files
+.project
+.cproject
+.settings/
+
+# System files
+.fuse_hidden*
+.Trash-*
+.nfs*

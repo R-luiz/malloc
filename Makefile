@@ -26,7 +26,19 @@ LIBDIR      = lib
 LIBFT_LIB   = $(LIBDIR)/build/libft.a
 LIBFT_INC   = $(LIBDIR)/include
 
-SRCS        = $(SRCDIR)/core/malloc_simple.c
+CORE_SRCS   = $(SRCDIR)/core/globals.c \
+              $(SRCDIR)/core/malloc.c \
+              $(SRCDIR)/core/free.c \
+              $(SRCDIR)/core/realloc.c
+
+ZONE_SRCS   = $(SRCDIR)/zone/zone.c
+
+CHUNK_SRCS  = $(SRCDIR)/chunk/chunk.c
+
+UTILS_SRCS  = $(SRCDIR)/utils/show_alloc_mem.c \
+              $(SRCDIR)/utils/stats.c
+
+SRCS        = $(CORE_SRCS) $(ZONE_SRCS) $(CHUNK_SRCS) $(UTILS_SRCS)
 OBJS        = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 LIBFT_DIR   = $(LIBDIR)
@@ -41,7 +53,7 @@ $(OBJDIR) $(BINDIR):
 
 $(NAME): $(LIBFT) $(OBJS) | $(BINDIR)
 	@echo "Creating library $(NAME)..."
-	$(CC) $(LDFLAGS) -o $(BINDIR)/$(NAME) $(OBJS) -L$(LIBDIR)/build -lft
+	$(CC) $(LDFLAGS) -o $(BINDIR)/$(NAME) $(OBJS) -L$(LIBDIR)/build -lft -lpthread
 	@rm -f $(BINDIR)/$(LINK_NAME)
 	@ln -s $(NAME) $(BINDIR)/$(LINK_NAME)
 	@rm -f $(LINK_NAME)
@@ -88,4 +100,10 @@ help:
 	@echo "  Name: $(NAME)"
 	@echo "  HOSTTYPE: $(HOSTTYPE)"
 	@echo "  Output: $(BINDIR)/$(NAME)"
+	@echo ""
+	@echo "Source files:"
+	@echo "  Core: $(CORE_SRCS)"
+	@echo "  Zone: $(ZONE_SRCS)"
+	@echo "  Chunk: $(CHUNK_SRCS)"
+	@echo "  Utils: $(UTILS_SRCS)"
 	@echo ""
