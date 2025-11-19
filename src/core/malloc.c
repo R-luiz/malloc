@@ -19,6 +19,7 @@ void *malloc(size_t size)
     t_chunk *chunk = find_free_chunk(zone, aligned_size);
 
     if (chunk) {
+        chunk->magic = CHUNK_MAGIC_ALLOCATED;
         chunk->is_free = 0;
         split_chunk(chunk, aligned_size, zone);
     } else {

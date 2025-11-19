@@ -12,14 +12,14 @@ void *realloc(void *ptr, size_t size)
     }
 
     t_chunk *chunk = get_chunk_from_ptr(ptr);
-    if (!chunk)
+    if (!validate_chunk(chunk))
         return NULL;
 
     size_t aligned_size = ALIGN(size);
 
     if (chunk->size >= aligned_size) {
         pthread_mutex_lock(&g_mutex);
-        t_zone *zone = find_zone_for_chunk(chunk);
+        t_zone *zone = chunk->zone;
         split_chunk(chunk, aligned_size, zone);
         pthread_mutex_unlock(&g_mutex);
         return ptr;

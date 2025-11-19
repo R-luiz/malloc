@@ -13,10 +13,12 @@ t_chunk *create_chunk_in_zone(t_zone *zone, size_t size)
     void *chunk_addr = (char *)zone->start + zone->used_size;
     t_chunk *chunk = (t_chunk *)chunk_addr;
 
+    chunk->magic = CHUNK_MAGIC_ALLOCATED;
     chunk->size = size;
     chunk->is_free = 0;
     chunk->next = zone->chunks;
     chunk->prev = NULL;
+    chunk->zone = zone;
 
     if (zone->chunks)
         zone->chunks->prev = chunk;
@@ -54,10 +56,12 @@ void split_chunk(t_chunk *chunk, size_t size, t_zone *zone)
     void *new_chunk_addr = (char *)chunk + CHUNK_HEADER_SIZE + size;
     t_chunk *new_chunk = (t_chunk *)new_chunk_addr;
 
+    new_chunk->magic = CHUNK_MAGIC_FREE;
     new_chunk->size = chunk->size - size - CHUNK_HEADER_SIZE;
     new_chunk->is_free = 1;
     new_chunk->next = chunk->next;
     new_chunk->prev = chunk;
+    new_chunk->zone = zone;
 
     if (chunk->next)
         chunk->next->prev = new_chunk;
@@ -108,4 +112,26 @@ t_chunk *get_chunk_from_ptr(void *ptr)
     if (!ptr)
         return NULL;
     return (t_chunk *)((char *)ptr - CHUNK_HEADER_SIZE);
+}
+
+int validate_chunk(t_chunk *chunk)
+{
+    if (!chunk)
+        return 0;
+
+    if (chunk->magic != CHUNK_MAGIC_ALLOCATED && 
+        chunk->magic != CHUNK_MAGIC_FREE)
+        return 0;
+
+    if (!chunk->zone)
+        return 0;
+
+    if (!validate_zone(chunk->zone))
+        return 0;
+
+    if ((void *)chunk < chunk->zone->start || 
+        (void *)chunk >= chunk->zone->end)
+        return 0;
+
+    return 1;
 }

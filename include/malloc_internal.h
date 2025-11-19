@@ -17,20 +17,29 @@
 # define MAX_CHUNKS_PER_ZONE 10000
 # define MAX_ZONE_SEARCH 100
 
+# define CHUNK_MAGIC_ALLOCATED 0xDEADBEEF
+# define CHUNK_MAGIC_FREE 0xFEEDFACE
+# define ZONE_MAGIC 0xCAFEBABE
+
 typedef enum {
     ZONE_TINY = 0,
     ZONE_SMALL = 1,
     ZONE_LARGE = 2
 } t_zone_type;
 
+typedef struct s_zone t_zone;
+
 typedef struct s_chunk {
+    uint32_t magic;
     size_t size;
     int is_free;
     struct s_chunk *next;
     struct s_chunk *prev;
+    t_zone *zone;
 } t_chunk;
 
 typedef struct s_zone {
+    uint32_t magic;
     t_zone_type type;
     size_t total_size;
     size_t used_size;
@@ -56,8 +65,10 @@ t_zone_type get_zone_type(size_t size);
 size_t get_zone_size(t_zone_type type);
 t_zone *create_zone(t_zone_type type, size_t min_size);
 void add_zone_to_manager(t_zone *zone);
+void remove_zone_from_manager(t_zone *zone);
 t_zone *find_or_create_zone(t_zone_type type, size_t size);
 t_zone *find_zone_for_chunk(t_chunk *chunk);
+int is_zone_empty(t_zone *zone);
 
 t_chunk *create_chunk_in_zone(t_zone *zone, size_t size);
 t_chunk *find_free_chunk(t_zone *zone, size_t size);
@@ -65,5 +76,8 @@ void split_chunk(t_chunk *chunk, size_t size, t_zone *zone);
 void merge_adjacent_chunks(t_chunk *chunk, t_zone *zone);
 void *get_user_ptr(t_chunk *chunk);
 t_chunk *get_chunk_from_ptr(void *ptr);
+
+int validate_chunk(t_chunk *chunk);
+int validate_zone(t_zone *zone);
 
 #endif

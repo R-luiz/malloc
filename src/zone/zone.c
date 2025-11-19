@@ -50,6 +50,7 @@ t_zone *create_zone(t_zone_type type, size_t min_size)
         return NULL;
 
     t_zone *zone = (t_zone *)ptr;
+    zone->magic = ZONE_MAGIC;
     zone->type = type;
     zone->total_size = zone_size;
     zone->used_size = ZONE_HEADER_SIZE;
@@ -127,4 +128,66 @@ t_zone *find_zone_for_chunk(t_chunk *chunk)
         }
     }
     return NULL;
+}
+
+void remove_zone_from_manager(t_zone *zone)
+{
+    if (!zone)
+        return;
+
+    t_zone_type type = zone->type;
+    t_zone *current = g_manager.zones[type];
+    t_zone *prev = NULL;
+    int iterations = 0;
+
+    while (current && iterations < MAX_ZONES_PER_TYPE) {
+        if (current == zone) {
+            if (prev)
+                prev->next = zone->next;
+            else
+                g_manager.zones[type] = zone->next;
+
+            if (type != ZONE_LARGE && g_manager.zone_counts[type] > 0)
+                g_manager.zone_counts[type]--;
+            return;
+        }
+        prev = current;
+        current = current->next;
+        iterations++;
+    }
+}
+
+int is_zone_empty(t_zone *zone)
+{
+    if (!zone || !zone->chunks)
+        return 0;
+
+    t_chunk *chunk = zone->chunks;
+    int iterations = 0;
+
+    while (chunk && iterations < MAX_CHUNKS_PER_ZONE) {
+        if (!chunk->is_free)
+            return 0;
+        chunk = chunk->next;
+        iterations++;
+    }
+
+    return 1;
+}
+
+int validate_zone(t_zone *zone)
+{
+    if (!zone)
+        return 0;
+
+    if (zone->magic != ZONE_MAGIC)
+        return 0;
+
+    if ((void *)zone != zone->start)
+        return 0;
+
+    if (zone->type < ZONE_TINY || zone->type > ZONE_LARGE)
+        return 0;
+
+    return 1;
 }
