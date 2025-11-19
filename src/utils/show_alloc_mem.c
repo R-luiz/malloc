@@ -12,12 +12,12 @@ void show_alloc_mem(void)
         t_zone *zone = g_manager.zones[type];
         int zone_iter = 0;
 
-        while (zone && zone_iter < 1000) {
+        while (zone && zone_iter < MAX_ZONES_PER_TYPE) {
             printf("%s : %p\n", zone_names[type], zone->start);
 
             t_chunk *chunk = zone->chunks;
             int chunk_iter = 0;
-            while (chunk && chunk_iter < 10000) {
+            while (chunk && chunk_iter < MAX_CHUNKS_PER_ZONE) {
                 if (!chunk->is_free) {
                     void *user_ptr = get_user_ptr(chunk);
                     printf("%p - %p : %zu bytes\n",

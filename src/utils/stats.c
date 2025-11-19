@@ -18,10 +18,10 @@ int get_malloc_stats(t_malloc_stats *stats)
     for (int type = 0; type < 3; type++) {
         t_zone *zone = g_manager.zones[type];
         int zone_iter = 0;
-        while (zone && zone_iter < 1000) {
+        while (zone && zone_iter < MAX_ZONES_PER_TYPE) {
             t_chunk *chunk = zone->chunks;
             int chunk_iter = 0;
-            while (chunk && chunk_iter < 10000) {
+            while (chunk && chunk_iter < MAX_CHUNKS_PER_ZONE) {
                 if (!chunk->is_free) {
                     stats->bytes_allocated += chunk->size;
                     if (type == ZONE_TINY)
@@ -52,10 +52,10 @@ int check_malloc_leaks(void)
     for (int type = 0; type < 3; type++) {
         t_zone *zone = g_manager.zones[type];
         int zone_iter = 0;
-        while (zone && zone_iter < 1000) {
+        while (zone && zone_iter < MAX_ZONES_PER_TYPE) {
             t_chunk *chunk = zone->chunks;
             int chunk_iter = 0;
-            while (chunk && chunk_iter < 10000) {
+            while (chunk && chunk_iter < MAX_CHUNKS_PER_ZONE) {
                 if (!chunk->is_free)
                     leaks++;
                 chunk = chunk->next;

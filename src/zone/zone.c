@@ -65,11 +65,11 @@ void add_zone_to_manager(t_zone *zone)
     } else {
         t_zone *current = g_manager.zones[type];
         int iterations = 0;
-        while (current->next && iterations < 1000) {
+        while (current->next && iterations < MAX_ZONES_PER_TYPE) {
             current = current->next;
             iterations++;
         }
-        if (iterations < 1000)
+        if (iterations < MAX_ZONES_PER_TYPE)
             current->next = zone;
     }
 }
@@ -86,7 +86,7 @@ t_zone *find_or_create_zone(t_zone_type type, size_t size)
     }
 
     int iterations = 0;
-    while (zone && iterations < 100) {
+    while (zone && iterations < MAX_ZONE_SEARCH) {
         t_chunk *chunk = find_free_chunk(zone, size);
         if (chunk)
             return zone;
@@ -110,7 +110,7 @@ t_zone *find_zone_for_chunk(t_chunk *chunk)
     for (int type = 0; type < 3; type++) {
         t_zone *zone = g_manager.zones[type];
         int iterations = 0;
-        while (zone && iterations < 1000) {
+        while (zone && iterations < MAX_ZONES_PER_TYPE) {
             if ((void *)chunk >= zone->start && (void *)chunk < zone->end)
                 return zone;
             zone = zone->next;

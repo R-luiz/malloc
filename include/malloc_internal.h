@@ -13,6 +13,10 @@
 # define SMALL_ZONE_SIZE (104 * 4096)
 # define MIN_SPLIT_SIZE 32
 
+# define MAX_ZONES_PER_TYPE 1000
+# define MAX_CHUNKS_PER_ZONE 10000
+# define MAX_ZONE_SEARCH 100
+
 typedef enum {
     ZONE_TINY = 0,
     ZONE_SMALL = 1,

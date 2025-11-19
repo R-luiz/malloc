@@ -29,7 +29,7 @@ t_chunk *find_free_chunk(t_zone *zone, size_t size)
     t_chunk *current = zone->chunks;
     int iterations = 0;
 
-    while (current && iterations < 10000) {
+    while (current && iterations < MAX_CHUNKS_PER_ZONE) {
         if (current->is_free && current->size >= size)
             return current;
         current = current->next;
