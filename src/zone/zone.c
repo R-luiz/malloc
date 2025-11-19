@@ -31,6 +31,11 @@ size_t get_zone_size(t_zone_type type)
 
 t_zone *create_zone(t_zone_type type, size_t min_size)
 {
+    if (type != ZONE_LARGE) {
+        if (g_manager.zone_counts[type] >= MAX_ZONES_PER_TYPE)
+            return NULL;
+    }
+
     size_t zone_size = get_zone_size(type);
 
     if (type == ZONE_LARGE) {
@@ -52,6 +57,10 @@ t_zone *create_zone(t_zone_type type, size_t min_size)
     zone->end = (char *)ptr + zone_size;
     zone->chunks = NULL;
     zone->next = NULL;
+    zone->chunk_count = 0;
+
+    if (type != ZONE_LARGE)
+        g_manager.zone_counts[type]++;
 
     return zone;
 }

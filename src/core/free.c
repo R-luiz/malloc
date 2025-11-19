@@ -13,8 +13,10 @@ void free(void *ptr)
         return;
     }
 
+    t_zone *zone = find_zone_for_chunk(chunk);
+
     chunk->is_free = 1;
-    merge_adjacent_chunks(chunk);
+    merge_adjacent_chunks(chunk, zone);
 
     pthread_mutex_unlock(&g_mutex);
 }

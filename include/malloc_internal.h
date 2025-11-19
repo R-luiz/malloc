@@ -38,10 +38,12 @@ typedef struct s_zone {
     void *end;
     t_chunk *chunks;
     struct s_zone *next;
+    size_t chunk_count;
 } t_zone;
 
 typedef struct {
     t_zone *zones[3];
+    size_t zone_counts[3];
 } t_zone_manager;
 
 # define CHUNK_HEADER_SIZE ALIGN(sizeof(t_chunk))
@@ -59,8 +61,8 @@ t_zone *find_zone_for_chunk(t_chunk *chunk);
 
 t_chunk *create_chunk_in_zone(t_zone *zone, size_t size);
 t_chunk *find_free_chunk(t_zone *zone, size_t size);
-void split_chunk(t_chunk *chunk, size_t size);
-void merge_adjacent_chunks(t_chunk *chunk);
+void split_chunk(t_chunk *chunk, size_t size, t_zone *zone);
+void merge_adjacent_chunks(t_chunk *chunk, t_zone *zone);
 void *get_user_ptr(t_chunk *chunk);
 t_chunk *get_chunk_from_ptr(void *ptr);
 

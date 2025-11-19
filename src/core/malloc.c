@@ -20,7 +20,7 @@ void *malloc(size_t size)
 
     if (chunk) {
         chunk->is_free = 0;
-        split_chunk(chunk, aligned_size);
+        split_chunk(chunk, aligned_size, zone);
     } else {
         chunk = create_chunk_in_zone(zone, aligned_size);
         if (!chunk) {

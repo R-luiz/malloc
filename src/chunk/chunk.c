@@ -2,6 +2,9 @@
 
 t_chunk *create_chunk_in_zone(t_zone *zone, size_t size)
 {
+    if (zone->chunk_count >= MAX_CHUNKS_PER_ZONE)
+        return NULL;
+
     size_t needed = CHUNK_HEADER_SIZE + size;
 
     if (zone->used_size + needed > zone->total_size)
@@ -20,6 +23,7 @@ t_chunk *create_chunk_in_zone(t_zone *zone, size_t size)
     zone->chunks = chunk;
 
     zone->used_size += needed;
+    zone->chunk_count++;
 
     return chunk;
 }
@@ -39,9 +43,12 @@ t_chunk *find_free_chunk(t_zone *zone, size_t size)
     return NULL;
 }
 
-void split_chunk(t_chunk *chunk, size_t size)
+void split_chunk(t_chunk *chunk, size_t size, t_zone *zone)
 {
     if (chunk->size < size + CHUNK_HEADER_SIZE + MIN_SPLIT_SIZE)
+        return;
+
+    if (zone && zone->chunk_count >= MAX_CHUNKS_PER_ZONE)
         return;
 
     void *new_chunk_addr = (char *)chunk + CHUNK_HEADER_SIZE + size;
@@ -56,9 +63,12 @@ void split_chunk(t_chunk *chunk, size_t size)
         chunk->next->prev = new_chunk;
     chunk->next = new_chunk;
     chunk->size = size;
+
+    if (zone)
+        zone->chunk_count++;
 }
 
-void merge_adjacent_chunks(t_chunk *chunk)
+void merge_adjacent_chunks(t_chunk *chunk, t_zone *zone)
 {
     if (!chunk->is_free)
         return;
@@ -70,6 +80,8 @@ void merge_adjacent_chunks(t_chunk *chunk)
             chunk->next = chunk->next->next;
             if (chunk->next)
                 chunk->next->prev = chunk;
+            if (zone && zone->chunk_count > 0)
+                zone->chunk_count--;
         }
     }
 
@@ -80,6 +92,8 @@ void merge_adjacent_chunks(t_chunk *chunk)
             chunk->prev->next = chunk->next;
             if (chunk->next)
                 chunk->next->prev = chunk->prev;
+            if (zone && zone->chunk_count > 0)
+                zone->chunk_count--;
         }
     }
 }
