@@ -1,583 +1,449 @@
 #include "include/malloc.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <unistd.h>
 #include <sys/time.h>
-#include <assert.h>
-#include <stdarg.h>
 
-#define MAX_ALLOCATIONS 10000
-#define LOG_BUFFER_SIZE 1024
+#define MAX_ALLOCS 1000
 
 typedef struct {
-    void *ptr;
-    size_t size;
-    int id;
-    struct timeval alloc_time;
-    int freed;
-} alloc_record_t;
+	void *ptr;
+	size_t size;
+	int id;
+	int freed;
+} t_record;
 
-typedef struct {
-    alloc_record_t records[MAX_ALLOCATIONS];
-    int count;
-    int next_id;
-    FILE *log_file;
-} test_context_t;
+static t_record g_records[MAX_ALLOCS];
+static int g_count = 0;
+static int g_next_id = 0;
 
-static test_context_t g_ctx = {0};
-
-/* ========================================================================== */
-/*                            LOGGING UTILITIES                               */
-/* ========================================================================== */
-
-void log_msg(const char *format, ...)
+static void put_str(const char *str)
 {
-    char buffer[LOG_BUFFER_SIZE];
-    va_list args;
-    
-    va_start(args, format);
-    vsnprintf(buffer, LOG_BUFFER_SIZE, format, args);
-    va_end(args);
-    
-    printf("%s", buffer);
-    
-    if (g_ctx.log_file) {
-        fprintf(g_ctx.log_file, "%s", buffer);
-        fflush(g_ctx.log_file);
-    }
+	int i = 0;
+	while (str[i])
+		i++;
+	write(1, str, i);
 }
 
-void init_logging(void)
+static void put_nbr(int n)
 {
-    time_t now = time(NULL);
-    struct tm *t = localtime(&now);
-    char filename[256];
-    
-    snprintf(filename, sizeof(filename), 
-             "logs_tests_%04d%02d%02d_%02d%02d%02d.log",
-             t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-             t->tm_hour, t->tm_min, t->tm_sec);
-    
-    g_ctx.log_file = fopen(filename, "w");
-    
-    if (g_ctx.log_file) {
-        log_msg("=================================================================\n");
-        log_msg("  MALLOC INTERACTIVE TEST - LOG FILE\n");
-        log_msg("  Date: %s", ctime(&now));
-        log_msg("=================================================================\n\n");
-    } else {
-        printf("Warning: Could not create log file %s\n", filename);
-    }
+	char buffer[12];
+	int i = 0;
+	int neg = 0;
+
+	if (n < 0) {
+		neg = 1;
+		n = -n;
+	}
+
+	if (n == 0) {
+		write(1, "0", 1);
+		return;
+	}
+
+	while (n > 0) {
+		buffer[i++] = '0' + (n % 10);
+		n /= 10;
+	}
+
+	if (neg)
+		write(1, "-", 1);
+
+	while (i > 0)
+		write(1, &buffer[--i], 1);
 }
 
-void close_logging(void)
+static void put_size(size_t n)
 {
-    if (g_ctx.log_file) {
-        log_msg("\n=================================================================\n");
-        log_msg("  TEST SESSION ENDED\n");
-        log_msg("=================================================================\n");
-        fclose(g_ctx.log_file);
-        g_ctx.log_file = NULL;
-    }
+	char buffer[20];
+	int i = 0;
+
+	if (n == 0) {
+		write(1, "0", 1);
+		return;
+	}
+
+	while (n > 0) {
+		buffer[i++] = '0' + (n % 10);
+		n /= 10;
+	}
+
+	while (i > 0)
+		write(1, &buffer[--i], 1);
 }
 
-/* ========================================================================== */
-/*                          ALLOCATION TRACKING                               */
-/* ========================================================================== */
-
-int add_allocation(void *ptr, size_t size)
+static void put_ptr(void *ptr)
 {
-    if (g_ctx.count >= MAX_ALLOCATIONS) {
-        log_msg("ERROR: Max allocations (%d) reached\n", MAX_ALLOCATIONS);
-        return -1;
-    }
-    
-    g_ctx.records[g_ctx.count].ptr = ptr;
-    g_ctx.records[g_ctx.count].size = size;
-    g_ctx.records[g_ctx.count].id = g_ctx.next_id++;
-    gettimeofday(&g_ctx.records[g_ctx.count].alloc_time, NULL);
-    g_ctx.records[g_ctx.count].freed = 0;
-    
-    return g_ctx.count++;
+	char hex_digits[] = "0123456789ABCDEF";
+	char buffer[16];
+	unsigned long addr = (unsigned long)ptr;
+	int i = 0;
+
+	write(1, "0x", 2);
+
+	if (addr == 0) {
+		write(1, "0", 1);
+		return;
+	}
+
+	while (addr > 0) {
+		buffer[i++] = hex_digits[addr % 16];
+		addr /= 16;
+	}
+
+	while (i > 0)
+		write(1, &buffer[--i], 1);
 }
 
-alloc_record_t *find_allocation(int id)
+static int read_number(void)
 {
-    for (int i = 0; i < g_ctx.count; i++) {
-        if (g_ctx.records[i].id == id && !g_ctx.records[i].freed)
-            return &g_ctx.records[i];
-    }
-    return NULL;
+	char buffer[32];
+	int i = 0;
+	int result = 0;
+	ssize_t n;
+
+	n = read(0, buffer, sizeof(buffer) - 1);
+	if (n <= 0)
+		return -1;
+
+	while (i < n && buffer[i] >= '0' && buffer[i] <= '9') {
+		result = result * 10 + (buffer[i] - '0');
+		i++;
+	}
+
+	return i > 0 ? result : -1;
 }
 
-void mark_freed(int id)
+static int add_record(void *ptr, size_t size)
 {
-    alloc_record_t *rec = find_allocation(id);
-    if (rec)
-        rec->freed = 1;
+	if (g_count >= MAX_ALLOCS)
+		return -1;
+
+	g_records[g_count].ptr = ptr;
+	g_records[g_count].size = size;
+	g_records[g_count].id = g_next_id++;
+	g_records[g_count].freed = 0;
+
+	return g_count++;
 }
 
-/* ========================================================================== */
-/*                          PERFORMANCE UTILITIES                             */
-/* ========================================================================== */
-
-double get_time_diff(struct timeval *start, struct timeval *end)
+static t_record *find_record(int id)
 {
-    return (end->tv_sec - start->tv_sec) + 
-           (end->tv_usec - start->tv_usec) / 1000000.0;
+	int i = 0;
+
+	while (i < g_count) {
+		if (g_records[i].id == id && !g_records[i].freed)
+			return &g_records[i];
+		i++;
+	}
+
+	return NULL;
 }
 
-void benchmark_malloc(size_t size, int count)
+static void print_menu(void)
 {
-    struct timeval start, end;
-    void *ptrs[1000];
-    int actual_count = count > 1000 ? 1000 : count;
-    
-    log_msg("\n--- BENCHMARK: malloc(%zu) x %d times ---\n", size, actual_count);
-    
-    gettimeofday(&start, NULL);
-    for (int i = 0; i < actual_count; i++) {
-        ptrs[i] = malloc(size);
-    }
-    gettimeofday(&end, NULL);
-    
-    double total_time = get_time_diff(&start, &end);
-    double avg_time = total_time / actual_count;
-    
-    log_msg("Total time: %.6f seconds\n", total_time);
-    log_msg("Average time per malloc: %.9f seconds (%.3f µs)\n", 
-            avg_time, avg_time * 1000000);
-    log_msg("Operations per second: %.2f\n", actual_count / total_time);
-    
-    for (int i = 0; i < actual_count; i++) {
-        if (ptrs[i]) {
-            add_allocation(ptrs[i], size);
-        }
-    }
+	put_str("\n");
+	put_str("=============================================\n");
+	put_str("        MALLOC INTERACTIVE TEST              \n");
+	put_str("=============================================\n");
+	put_str("\n");
+	put_str("1. malloc         - Allocate memory\n");
+	put_str("2. free (id)      - Free allocation\n");
+	put_str("3. free all       - Free all\n");
+	put_str("4. realloc (id)   - Reallocate\n");
+	put_str("5. list           - List allocations\n");
+	put_str("6. show_alloc_mem - Show zones\n");
+	put_str("7. stats          - Statistics\n");
+	put_str("8. leaks          - Check leaks\n");
+	put_str("9. cleanup        - Run cleanup\n");
+	put_str("0. exit           - Exit\n");
+	put_str("\n");
+	put_str("Active: ");
+	put_nbr(g_count);
+	put_str("/");
+	put_nbr(MAX_ALLOCS);
+	put_str("\n");
+	put_str("=============================================\n");
+	put_str("Command: ");
 }
 
-void benchmark_free(void)
+static void cmd_malloc(void)
 {
-    struct timeval start, end;
-    int freed_count = 0;
-    
-    log_msg("\n--- BENCHMARK: free() on all active allocations ---\n");
-    
-    gettimeofday(&start, NULL);
-    for (int i = 0; i < g_ctx.count; i++) {
-        if (!g_ctx.records[i].freed) {
-            free(g_ctx.records[i].ptr);
-            g_ctx.records[i].freed = 1;
-            freed_count++;
-        }
-    }
-    gettimeofday(&end, NULL);
-    
-    double total_time = get_time_diff(&start, &end);
-    double avg_time = freed_count > 0 ? total_time / freed_count : 0;
-    
-    log_msg("Freed %d allocations\n", freed_count);
-    log_msg("Total time: %.6f seconds\n", total_time);
-    log_msg("Average time per free: %.9f seconds (%.3f µs)\n", 
-            avg_time, avg_time * 1000000);
+	int size;
+	int count;
+	int i = 0;
+	int success = 0;
+
+	put_str("\n>>> MALLOC <<<\n");
+	put_str("Size (bytes): ");
+	size = read_number();
+	if (size <= 0) {
+		put_str("Invalid size\n");
+		return;
+	}
+
+	put_str("Count (1-100): ");
+	count = read_number();
+	if (count <= 0 || count > 100) {
+		put_str("Invalid count\n");
+		return;
+	}
+
+	while (i < count) {
+		void *ptr = malloc((size_t)size);
+		if (ptr) {
+			if (add_record(ptr, (size_t)size) >= 0)
+				success++;
+			else {
+				free(ptr);
+				break;
+			}
+		}
+		i++;
+	}
+
+	put_str("Allocated: ");
+	put_nbr(success);
+	put_str("/");
+	put_nbr(count);
+	put_str("\n");
 }
 
-/* ========================================================================== */
-/*                              TEST FUNCTIONS                                */
-/* ========================================================================== */
-
-void cmd_malloc(void)
+static void cmd_free_id(void)
 {
-    size_t size;
-    int count;
-    
-    log_msg("\n>>> MALLOC COMMAND <<<\n");
-    printf("Enter size (bytes): ");
-    if (scanf("%zu", &size) != 1) {
-        log_msg("ERROR: Invalid size\n");
-        while (getchar() != '\n');
-        return;
-    }
-    
-    printf("Enter count (1-1000): ");
-    if (scanf("%d", &count) != 1 || count < 1 || count > 1000) {
-        log_msg("ERROR: Invalid count (must be 1-1000)\n");
-        while (getchar() != '\n');
-        return;
-    }
-    
-    log_msg("Allocating %d blocks of %zu bytes...\n", count, size);
-    
-    int success = 0;
-    for (int i = 0; i < count; i++) {
-        void *ptr = malloc(size);
-        if (ptr) {
-            int idx = add_allocation(ptr, size);
-            if (idx >= 0) {
-                success++;
-            } else {
-                free(ptr);
-                break;
-            }
-        }
-    }
-    
-    log_msg("Successfully allocated: %d/%d blocks\n", success, count);
-    log_msg("Total active allocations: %d\n", g_ctx.count);
+	int id;
+	t_record *rec;
+
+	put_str("\n>>> FREE BY ID <<<\n");
+	put_str("Allocation ID: ");
+	id = read_number();
+
+	rec = find_record(id);
+	if (!rec) {
+		put_str("ID not found\n");
+		return;
+	}
+
+	put_str("Freeing ID ");
+	put_nbr(id);
+	put_str(" (");
+	put_size(rec->size);
+	put_str(" bytes)\n");
+
+	free(rec->ptr);
+	rec->freed = 1;
+	put_str("Freed\n");
 }
 
-void cmd_free_id(void)
+static void cmd_free_all(void)
 {
-    int id;
-    
-    log_msg("\n>>> FREE BY ID COMMAND <<<\n");
-    printf("Enter allocation ID: ");
-    if (scanf("%d", &id) != 1) {
-        log_msg("ERROR: Invalid ID\n");
-        while (getchar() != '\n');
-        return;
-    }
-    
-    alloc_record_t *rec = find_allocation(id);
-    if (!rec) {
-        log_msg("ERROR: Allocation ID %d not found or already freed\n", id);
-        return;
-    }
-    
-    log_msg("Freeing allocation ID %d (size: %zu bytes)\n", id, rec->size);
-    free(rec->ptr);
-    rec->freed = 1;
-    log_msg("Successfully freed\n");
+	int i = 0;
+	int count = 0;
+
+	put_str("\n>>> FREE ALL <<<\n");
+
+	while (i < g_count) {
+		if (!g_records[i].freed) {
+			free(g_records[i].ptr);
+			g_records[i].freed = 1;
+			count++;
+		}
+		i++;
+	}
+
+	put_str("Freed ");
+	put_nbr(count);
+	put_str(" allocations\n");
 }
 
-void cmd_free_all(void)
+static void cmd_realloc(void)
 {
-    int count = 0;
-    
-    log_msg("\n>>> FREE ALL COMMAND <<<\n");
-    
-    for (int i = 0; i < g_ctx.count; i++) {
-        if (!g_ctx.records[i].freed) {
-            free(g_ctx.records[i].ptr);
-            g_ctx.records[i].freed = 1;
-            count++;
-        }
-    }
-    
-    log_msg("Freed %d allocations\n", count);
+	int id;
+	int new_size;
+	t_record *rec;
+	void *new_ptr;
+
+	put_str("\n>>> REALLOC <<<\n");
+	put_str("Allocation ID: ");
+	id = read_number();
+
+	rec = find_record(id);
+	if (!rec) {
+		put_str("ID not found\n");
+		return;
+	}
+
+	put_str("New size (bytes): ");
+	new_size = read_number();
+	if (new_size < 0) {
+		put_str("Invalid size\n");
+		return;
+	}
+
+	put_str("Reallocating ID ");
+	put_nbr(id);
+	put_str(" from ");
+	put_size(rec->size);
+	put_str(" to ");
+	put_nbr(new_size);
+	put_str(" bytes\n");
+
+	new_ptr = realloc(rec->ptr, (size_t)new_size);
+	if (new_ptr) {
+		rec->ptr = new_ptr;
+		rec->size = (size_t)new_size;
+		put_str("Success\n");
+	} else {
+		put_str("Failed\n");
+	}
 }
 
-void cmd_realloc(void)
+static void cmd_list(void)
 {
-    int id;
-    size_t new_size;
-    
-    log_msg("\n>>> REALLOC COMMAND <<<\n");
-    printf("Enter allocation ID: ");
-    if (scanf("%d", &id) != 1) {
-        log_msg("ERROR: Invalid ID\n");
-        while (getchar() != '\n');
-        return;
-    }
-    
-    printf("Enter new size (bytes): ");
-    if (scanf("%zu", &new_size) != 1) {
-        log_msg("ERROR: Invalid size\n");
-        while (getchar() != '\n');
-        return;
-    }
-    
-    alloc_record_t *rec = find_allocation(id);
-    if (!rec) {
-        log_msg("ERROR: Allocation ID %d not found\n", id);
-        return;
-    }
-    
-    log_msg("Reallocating ID %d from %zu to %zu bytes\n", 
-            id, rec->size, new_size);
-    
-    void *new_ptr = realloc(rec->ptr, new_size);
-    if (new_ptr) {
-        rec->ptr = new_ptr;
-        rec->size = new_size;
-        log_msg("Successfully reallocated\n");
-    } else {
-        log_msg("ERROR: realloc failed\n");
-    }
+	int i = 0;
+	int active = 0;
+	const char *type;
+
+	put_str("\n>>> ALLOCATIONS <<<\n");
+	put_str("ID     Address           Size       Type\n");
+	put_str("-------------------------------------------\n");
+
+	while (i < g_count) {
+		if (!g_records[i].freed) {
+			type = "LARGE";
+			if (g_records[i].size <= 128)
+				type = "TINY";
+			else if (g_records[i].size <= 1024)
+				type = "SMALL";
+
+			put_nbr(g_records[i].id);
+			put_str("      ");
+			put_ptr(g_records[i].ptr);
+			put_str("  ");
+			put_size(g_records[i].size);
+			put_str("      ");
+			put_str(type);
+			put_str("\n");
+			active++;
+		}
+		i++;
+	}
+
+	put_str("-------------------------------------------\n");
+	put_str("Active: ");
+	put_nbr(active);
+	put_str("\n");
 }
 
-void cmd_list_allocations(void)
+static void cmd_show_mem(void)
 {
-    int active = 0;
-    
-    log_msg("\n>>> ACTIVE ALLOCATIONS <<<\n");
-    log_msg("%-6s %-18s %-12s %-10s\n", "ID", "Address", "Size", "Type");
-    log_msg("-------------------------------------------------------\n");
-    
-    for (int i = 0; i < g_ctx.count; i++) {
-        if (!g_ctx.records[i].freed) {
-            const char *type = "LARGE";
-            if (g_ctx.records[i].size <= 128)
-                type = "TINY";
-            else if (g_ctx.records[i].size <= 1024)
-                type = "SMALL";
-            
-            log_msg("%-6d %p %-12zu %-10s\n",
-                    g_ctx.records[i].id,
-                    g_ctx.records[i].ptr,
-                    g_ctx.records[i].size,
-                    type);
-            active++;
-        }
-    }
-    
-    log_msg("-------------------------------------------------------\n");
-    log_msg("Total active: %d\n", active);
+	put_str("\n>>> SHOW_ALLOC_MEM <<<\n");
+	show_alloc_mem();
 }
 
-void cmd_show_alloc_mem(void)
+static void cmd_stats(void)
 {
-    log_msg("\n>>> SHOW_ALLOC_MEM OUTPUT <<<\n");
-    show_alloc_mem();
+	t_malloc_stats stats;
+
+	put_str("\n>>> STATISTICS <<<\n");
+
+	if (get_malloc_stats(&stats) == 0) {
+		put_str("Bytes allocated: ");
+		put_size(stats.bytes_allocated);
+		put_str("\n");
+
+		put_str("TINY allocs:     ");
+		put_nbr(stats.allocs_tiny);
+		put_str("\n");
+
+		put_str("SMALL allocs:    ");
+		put_nbr(stats.allocs_small);
+		put_str("\n");
+
+		put_str("LARGE allocs:    ");
+		put_nbr(stats.allocs_large);
+		put_str("\n");
+	} else {
+		put_str("Failed to get stats\n");
+	}
 }
 
-void cmd_stats(void)
+static void cmd_leaks(void)
 {
-    t_malloc_stats stats;
-    
-    log_msg("\n>>> MALLOC STATISTICS <<<\n");
-    
-    if (get_malloc_stats(&stats) == 0) {
-        log_msg("Bytes allocated:     %zu\n", stats.bytes_allocated);
-        log_msg("TINY allocations:    %u\n", stats.allocs_tiny);
-        log_msg("SMALL allocations:   %u\n", stats.allocs_small);
-        log_msg("LARGE allocations:   %u\n", stats.allocs_large);
-        log_msg("Active zones:        %u\n", stats.zones_active);
-        log_msg("Total zones:         %u\n", stats.zones_total);
-    } else {
-        log_msg("ERROR: Could not retrieve statistics\n");
-    }
-    
-    int tracked_active = 0;
-    for (int i = 0; i < g_ctx.count; i++) {
-        if (!g_ctx.records[i].freed)
-            tracked_active++;
-    }
-    log_msg("\nTracked allocations: %d active, %d freed, %d total\n",
-            tracked_active, g_ctx.count - tracked_active, g_ctx.count);
+	int leaks;
+
+	put_str("\n>>> LEAK CHECK <<<\n");
+
+	leaks = check_malloc_leaks();
+
+	if (leaks > 0) {
+		put_str("WARNING: ");
+		put_nbr(leaks);
+		put_str(" leaks detected\n");
+	} else {
+		put_str("No leaks\n");
+	}
 }
 
-void cmd_check_leaks(void)
+static void cmd_cleanup(void)
 {
-    log_msg("\n>>> MEMORY LEAK CHECK <<<\n");
-    
-    int leaks = check_malloc_leaks();
-    
-    if (leaks > 0) {
-        log_msg("WARNING: %d memory leaks detected\n", leaks);
-    } else {
-        log_msg("No memory leaks detected\n");
-    }
+	int freed;
+
+	put_str("\n>>> CLEANUP <<<\n");
+
+	freed = malloc_cleanup();
+
+	put_str("Freed ");
+	put_nbr(freed);
+	put_str(" empty zones\n");
 }
-
-void cmd_validate_system(void)
-{
-    log_msg("\n>>> SYSTEM VALIDATION <<<\n");
-    
-    int result = malloc_validate_system();
-    
-    if (result == 0) {
-        log_msg("System validation: PASS\n");
-    } else {
-        log_msg("System validation: FAIL (code %d)\n", result);
-    }
-}
-
-void cmd_benchmark_suite(void)
-{
-    log_msg("\n>>> BENCHMARK SUITE <<<\n");
-    
-    benchmark_malloc(64, 100);
-    benchmark_malloc(512, 100);
-    benchmark_malloc(2048, 100);
-    benchmark_free();
-}
-
-void cmd_stress_test(void)
-{
-    int count;
-    
-    log_msg("\n>>> STRESS TEST <<<\n");
-    printf("Enter number of allocations (1-1000): ");
-    if (scanf("%d", &count) != 1 || count < 1 || count > 1000) {
-        log_msg("ERROR: Invalid count\n");
-        while (getchar() != '\n');
-        return;
-    }
-    
-    log_msg("Starting stress test with %d allocations...\n", count);
-    
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
-    
-    for (int i = 0; i < count; i++) {
-        size_t size = (rand() % 10240) + 1;
-        void *ptr = malloc(size);
-        if (ptr) {
-            add_allocation(ptr, size);
-        }
-    }
-    
-    gettimeofday(&end, NULL);
-    double elapsed = get_time_diff(&start, &end);
-    
-    log_msg("Stress test completed in %.6f seconds\n", elapsed);
-    log_msg("Average: %.6f seconds per allocation\n", elapsed / count);
-}
-
-void cmd_fragmentation_test(void)
-{
-    log_msg("\n>>> FRAGMENTATION TEST <<<\n");
-    log_msg("Allocating alternating sizes...\n");
-    
-    void *ptrs[100];
-    for (int i = 0; i < 100; i++) {
-        size_t size = (i % 2) ? 32 : 1024;
-        ptrs[i] = malloc(size);
-        if (ptrs[i]) {
-            add_allocation(ptrs[i], size);
-        }
-    }
-    
-    log_msg("Freeing every other allocation...\n");
-    for (int i = 0; i < 100; i += 2) {
-        if (ptrs[i]) {
-            free(ptrs[i]);
-            mark_freed(i);
-        }
-    }
-    
-    log_msg("Allocating in freed spaces...\n");
-    for (int i = 0; i < 50; i++) {
-        void *ptr = malloc(64);
-        if (ptr) {
-            add_allocation(ptr, 64);
-        }
-    }
-    
-    log_msg("Fragmentation test completed\n");
-    show_alloc_mem();
-}
-
-void cmd_clear_screen(void)
-{
-    printf("\033[2J\033[H");
-    log_msg("\n>>> SCREEN CLEARED <<<\n");
-}
-
-/* ========================================================================== */
-/*                               MENU SYSTEM                                  */
-/* ========================================================================== */
-
-void print_menu(void)
-{
-    printf("\n");
-    printf("==============================================================\n");
-    printf("                 MALLOC INTERACTIVE TEST                      \n");
-    printf("==============================================================\n");
-    printf("\n");
-    printf("ALLOCATION:\n");
-    printf("  1. malloc (size, count)      - Allocate memory blocks\n");
-    printf("  2. free (id)                 - Free specific allocation\n");
-    printf("  3. free all                  - Free all allocations\n");
-    printf("  4. realloc (id, new_size)    - Reallocate memory\n");
-    printf("\n");
-    printf("VISUALIZATION:\n");
-    printf("  5. list allocations          - Show tracked allocations\n");
-    printf("  6. show_alloc_mem()          - Display memory zones\n");
-    printf("  7. stats                     - Show malloc statistics\n");
-    printf("\n");
-    printf("DIAGNOSTICS:\n");
-    printf("  8. check leaks               - Check for memory leaks\n");
-    printf("  9. validate system           - Run system validation\n");
-    printf("\n");
-    printf("PERFORMANCE:\n");
-    printf(" 10. benchmark suite           - Run performance benchmarks\n");
-    printf(" 11. stress test               - Random allocation stress\n");
-    printf(" 12. fragmentation test        - Test memory fragmentation\n");
-    printf("\n");
-    printf("UTILITIES:\n");
-    printf(" 13. clear screen              - Clear terminal\n");
-    printf("  0. exit                      - Exit program\n");
-    printf("\n");
-    printf("Active allocations: %d/%d\n", g_ctx.count, MAX_ALLOCATIONS);
-    printf("==============================================================\n");
-    printf("Enter command: ");
-}
-
-void execute_command(int cmd)
-{
-    switch (cmd) {
-        case 1:  cmd_malloc(); break;
-        case 2:  cmd_free_id(); break;
-        case 3:  cmd_free_all(); break;
-        case 4:  cmd_realloc(); break;
-        case 5:  cmd_list_allocations(); break;
-        case 6:  cmd_show_alloc_mem(); break;
-        case 7:  cmd_stats(); break;
-        case 8:  cmd_check_leaks(); break;
-        case 9:  cmd_validate_system(); break;
-        case 10: cmd_benchmark_suite(); break;
-        case 11: cmd_stress_test(); break;
-        case 12: cmd_fragmentation_test(); break;
-        case 13: cmd_clear_screen(); break;
-        case 0:  log_msg("\n>>> EXIT <<<\n"); break;
-        default: log_msg("ERROR: Invalid command\n");
-    }
-}
-
-/* ========================================================================== */
-/*                                  MAIN                                      */
-/* ========================================================================== */
 
 int main(void)
 {
-    srand(time(NULL));
-    init_logging();
-    
-    log_msg("Interactive test session started\n");
-    log_msg("Max allocations: %d\n\n", MAX_ALLOCATIONS);
-    
-    int cmd;
-    do {
-        print_menu();
-        
-        if (scanf("%d", &cmd) != 1) {
-            log_msg("ERROR: Invalid input\n");
-            while (getchar() != '\n');
-            cmd = -1;
-            continue;
-        }
-        
-        while (getchar() != '\n');
-        
-        if (cmd != 0) {
-            execute_command(cmd);
-        }
-        
-    } while (cmd != 0);
-    
-    log_msg("\n>>> FINAL STATISTICS <<<\n");
-    cmd_stats();
-    cmd_check_leaks();
-    
-    log_msg("\nCleaning up remaining allocations...\n");
-    cmd_free_all();
-    
-    close_logging();
-    
-    printf("\nTest session ended. Check log file for details.\n");
-    
-    return 0;
+	int cmd = -1;
+
+	put_str("\nInteractive test started\n");
+	put_str("Max allocations: ");
+	put_nbr(MAX_ALLOCS);
+	put_str("\n");
+
+	while (cmd != 0) {
+		print_menu();
+
+		cmd = read_number();
+		if (cmd < 0)
+			continue;
+
+		if (cmd == 1)
+			cmd_malloc();
+		else if (cmd == 2)
+			cmd_free_id();
+		else if (cmd == 3)
+			cmd_free_all();
+		else if (cmd == 4)
+			cmd_realloc();
+		else if (cmd == 5)
+			cmd_list();
+		else if (cmd == 6)
+			cmd_show_mem();
+		else if (cmd == 7)
+			cmd_stats();
+		else if (cmd == 8)
+			cmd_leaks();
+		else if (cmd == 9)
+			cmd_cleanup();
+		else if (cmd == 0)
+			put_str("\n>>> EXIT <<<\n");
+		else
+			put_str("Invalid command\n");
+	}
+
+	put_str("\nFinal check:\n");
+	cmd_stats();
+	cmd_leaks();
+
+	put_str("\nCleaning up...\n");
+	cmd_free_all();
+
+	put_str("\nSession ended\n\n");
+
+	return 0;
 }
