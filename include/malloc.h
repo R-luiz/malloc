@@ -39,5 +39,7 @@ typedef struct s_malloc_stats {
 
 int     get_malloc_stats(t_malloc_stats *stats);
 int     check_malloc_leaks(void);
+int     malloc_cleanup(void);
+void    malloc_destroy(void);
 
 #endif
