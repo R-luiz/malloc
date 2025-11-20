@@ -1,5 +1,4 @@
 #include "../../include/malloc_internal.h"
-#include <stdio.h>
 
 static int zone_has_allocations(t_zone *zone)
 {
@@ -24,10 +23,7 @@ static void print_zone_allocations(t_zone *zone, size_t *total)
         if (!chunk->is_free) {
             void *user_ptr = get_user_ptr(chunk);
             void *end_ptr = (char *)user_ptr + chunk->size;
-            printf("0x%lX - 0x%lX : %zu bytes\n",
-                   (unsigned long)user_ptr,
-                   (unsigned long)end_ptr,
-                   chunk->size);
+            print_allocation(user_ptr, end_ptr, chunk->size);
             *total += chunk->size;
         }
         chunk = chunk->next;
@@ -48,8 +44,7 @@ void show_alloc_mem(void)
 
         while (zone && zone_iter < MAX_ZONES_PER_TYPE) {
             if (zone_has_allocations(zone)) {
-                printf("%s : 0x%lX\n", zone_names[type],
-                       (unsigned long)zone->start);
+                print_zone_header(zone_names[type], zone->start);
                 print_zone_allocations(zone, &total);
             }
             zone = zone->next;
@@ -57,7 +52,7 @@ void show_alloc_mem(void)
         }
     }
 
-    printf("Total : %zu bytes\n", total);
+    print_total(total);
 
     pthread_mutex_unlock(&g_mutex);
 }

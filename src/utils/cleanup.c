@@ -1,6 +1,5 @@
 #include "../../include/malloc_internal.h"
 #include <sys/mman.h>
-#include <string.h>
 
 static int cleanup_empty_zones_of_type(t_zone_type type)
 {
@@ -54,7 +53,7 @@ static void secure_zero_zone(t_zone *zone)
 	size_t size = zone->total_size;
 	unsigned char *ptr = (unsigned char *)zone->start;
 
-	memset(ptr, 0, size);
+	ft_memset(ptr, 0, size);
 }
 
 static void destroy_all_zones_of_type(t_zone_type type)

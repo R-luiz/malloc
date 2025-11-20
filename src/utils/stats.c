@@ -1,5 +1,4 @@
 #include "../../include/malloc_internal.h"
-#include <string.h>
 
 int malloc_validate_system(void)
 {
@@ -11,7 +10,7 @@ int get_malloc_stats(t_malloc_stats *stats)
     if (!stats)
         return -1;
 
-    memset(stats, 0, sizeof(t_malloc_stats));
+    ft_memset(stats, 0, sizeof(t_malloc_stats));
 
     pthread_mutex_lock(&g_mutex);
 

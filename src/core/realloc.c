@@ -1,5 +1,4 @@
 #include "../../include/malloc_internal.h"
-#include <string.h>
 #include <stdint.h>
 
 static int validate_realloc_ptr(void *ptr)
@@ -55,7 +54,7 @@ void *realloc(void *ptr, size_t size)
         return NULL;
 
     size_t copy_size = (chunk->size < size) ? chunk->size : size;
-    memcpy(new_ptr, ptr, copy_size);
+    ft_memcpy(new_ptr, ptr, copy_size);
     free(ptr);
 
     return new_ptr;

@@ -37,7 +37,9 @@ CHUNK_SRCS  = $(SRCDIR)/chunk/chunk.c
 
 UTILS_SRCS  = $(SRCDIR)/utils/show_alloc_mem.c \
               $(SRCDIR)/utils/stats.c \
-              $(SRCDIR)/utils/cleanup.c
+              $(SRCDIR)/utils/cleanup.c \
+              $(SRCDIR)/utils/output.c \
+              $(SRCDIR)/utils/memory.c
 
 SRCS        = $(CORE_SRCS) $(ZONE_SRCS) $(CHUNK_SRCS) $(UTILS_SRCS)
 OBJS        = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)

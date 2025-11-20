@@ -80,4 +80,11 @@ t_chunk *get_chunk_from_ptr(void *ptr);
 int validate_chunk(t_chunk *chunk);
 int validate_zone(t_zone *zone);
 
+void print_zone_header(const char *zone_name, void *address);
+void print_allocation(void *start, void *end, size_t size);
+void print_total(size_t total);
+
+void *ft_memcpy(void *dst, const void *src, size_t n);
+void *ft_memset(void *b, int c, size_t len);
+
 #endif
