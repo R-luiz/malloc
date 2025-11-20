@@ -65,3 +65,5 @@ libft_malloc_*.so
 .fuse_hidden*
 .Trash-*
 .nfs*
+
+en.subject.pdf
