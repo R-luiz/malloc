@@ -1,5 +1,30 @@
 #include "../../include/malloc_internal.h"
 #include <string.h>
+#include <stdint.h>
+
+static int validate_realloc_ptr(void *ptr)
+{
+    if ((uintptr_t)ptr % ALIGNMENT != 0)
+        return 0;
+
+    t_chunk *chunk = get_chunk_from_ptr(ptr);
+    if (!chunk)
+        return 0;
+
+    if (chunk->magic != CHUNK_MAGIC_ALLOCATED)
+        return 0;
+
+    if (chunk->is_free)
+        return 0;
+
+    if (!chunk->zone)
+        return 0;
+
+    if (!validate_zone(chunk->zone))
+        return 0;
+
+    return 1;
+}
 
 void *realloc(void *ptr, size_t size)
 {
@@ -11,10 +36,10 @@ void *realloc(void *ptr, size_t size)
         return NULL;
     }
 
-    t_chunk *chunk = get_chunk_from_ptr(ptr);
-    if (!validate_chunk(chunk))
+    if (!validate_realloc_ptr(ptr))
         return NULL;
 
+    t_chunk *chunk = get_chunk_from_ptr(ptr);
     size_t aligned_size = ALIGN(size);
 
     if (chunk->size >= aligned_size) {
